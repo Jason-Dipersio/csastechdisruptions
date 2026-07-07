@@ -2,7 +2,9 @@ import dash
 from dash import dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 
-from pages import gaming
+from pages.film import film
+# We'll import the other pages here in the page directory when they're ready if you want.
+# I just have it importing the film py file for now.
 
 app = dash.Dash(
     __name__,
@@ -12,12 +14,12 @@ app = dash.Dash(
 
 server = app.server
 
-# Register callbacks for each page module
-gaming.register_callbacks(app)
+# Register callbacks
+film.register_callbacks(app)
 
 
-# ── Hub (landing) page ────────────────────────────────────────────────────────
-
+# Home page
+# We can change this stuff later if you want, it's just placeholders
 hub_layout = html.Div([
     html.H1("Technological Disruptions", className="hub-title"),
     html.P(
@@ -36,39 +38,33 @@ hub_layout = html.Div([
 
 ], className="hub-container")
 
-
-# ── Placeholder sub-pages ─────────────────────────────────────────────────────
-
+# Placeholder page for those that aren't done yet
 def placeholder_page(title):
     return html.Div([
         html.H1(title),
-        html.P("Charts and analysis coming soon."),
+        html.P("Nothing yet"),
         dcc.Link("← Back to Hub", href="/", className="back-link"),
     ], className="page-container")
 
 music_layout = placeholder_page("Music Industry Disruptions")
-film_layout  = placeholder_page("Film Industry Disruptions")
+gaming_layout = placeholder_page("Gaming Industry Disruptions")
 ai_layout    = placeholder_page("How AI Affects These Industries")
-
-
-# ── App shell ─────────────────────────────────────────────────────────────────
 
 app.layout = html.Div([
     dcc.Location(id="url", refresh=False),
     html.Div(id="page-content"),
 ])
 
-
 @app.callback(Output("page-content", "children"), Input("url", "pathname"))
 def display_page(pathname):
     if pathname == "/music":
-        return music_layout
+        return music_layout # placeholder
     if pathname == "/gaming":
-        return gaming.layout()
+        return gaming_layout # placeholder
     if pathname == "/film":
-        return film_layout
+        return film.layout()
     if pathname == "/ai":
-        return ai_layout
+        return ai_layout # placeholder
     return hub_layout
 
 

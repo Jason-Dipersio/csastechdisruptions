@@ -4,7 +4,12 @@ import plotly.graph_objects as go
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 
-from .film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
+# This try and except block is here so that this film.py file can run independently
+# when it doesn't know the parent directory. 
+try:
+    from .film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
+except ImportError:
+    from film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
 
 
 def _empty_fig(message: str) -> go.Figure:
@@ -372,3 +377,22 @@ def register_callbacks(app):
             )
 
         return fig_sent, fig_stars
+    
+# This block here is necessary to be able to run this file individually,
+# without the app_tech_disruptions hub page.
+# If you'd like to be able to run your files without needing the hub page,
+# you can just copy and paste this block exactly how it is into your code.
+if __name__ == "__main__":
+    import os
+    import dash
+
+    # Point at the shared assets/ folder at the project root so standalone
+    # runs still pick up the same CSS as the hub app.
+    app = dash.Dash(
+        __name__,
+        external_stylesheets=[dbc.themes.LITERA],
+        assets_folder=os.path.join(os.path.dirname(__file__), "..", "..", "assets"),
+    )
+    app.layout = layout()
+    register_callbacks(app)
+    app.run(debug=True)

@@ -20,18 +20,15 @@ import plotly.express as px
 import plotly.graph_objs as go
 import matplotlib.pyplot as plt
 
-try:
- from .music_assets import CD_YearlyCount, CD_YearlySent, LP_YearlyCount, LP_YearlySent, musicdata
-except ImportError:
- from .music_assets import CD_YearlyCount, CD_YearlySent, LP_YearlyCount, LP_YearlySent, musicdata
+DATA_DIR = Path(__file__).resolve().parent / "music_assets"
 
 # set up dataframes
 
-CD_YearlyCount = pd.read_csv('CD_yearlycount.csv')
-CD_YearlySent = pd.read_csv('CD_yearlysent.csv')
-LP_YearlyCount = pd.read_csv('LP_yearlycount.csv')
-LP_YearlySent = pd.read_csv('LP_yearlysent.csv')
-df = pd.read_csv('musicdata.csv')
+CD_YearlyCount = pd.read_csv(DATA_DIR / "CD_yearlycount.csv")
+CD_YearlySent = pd.read_csv(DATA_DIR / "CD_yearlysent.csv")
+LP_YearlyCount = pd.read_csv(DATA_DIR / "LP_yearlycount.csv")
+LP_YearlySent = pd.read_csv(DATA_DIR / "LP_yearlysent.csv")
+df = pd.read_csv(DATA_DIR / "musicdata.csv")
 
 # Set up subframes for sales
 

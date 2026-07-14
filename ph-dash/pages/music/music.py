@@ -12,7 +12,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 import matplotlib.pyplot as plt
 
-DATA_DIR = Path(__file__).resolve().parent / "music_assets"
+DATA_DIR = Path(__file__).resolve().parent / "music" / "music_assets"
 
 # set up dataframes
 

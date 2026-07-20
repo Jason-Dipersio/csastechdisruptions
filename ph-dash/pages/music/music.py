@@ -42,7 +42,7 @@ cd_vinyl_sales_fig = go.Figure(data=[go.Scatter(x=cdFrame['year'], y=cdFrame['va
                               go.Scatter(x=vyFrame['year'], y=vyFrame['value_actual'], mode='lines', name='Vinyl')])
 cd_vinyl_sales_fig.update_layout(title='CD Sales vs Vinyl Sales (1973-2019)',
                           xaxis_title='Year',
-                          yaxis_title='Estimated Units (In Billions)')
+                          yaxis_title='Estimated Sales (In Billions)')
 
 
 cd_article_count_fig = go.Figure(data=[go.Bar(x=CD_YearlyCount['year'], y=CD_YearlyCount['count'], name='CD')])
@@ -206,7 +206,7 @@ def register_callbacks(app):
                                   go.Scatter(x=vyFrame['year'], y=vyFrame['value_actual'], mode='lines', name='Vinyl')])
             fig.update_layout(title='CD Sales vs Vinyl Sales (1973-2019)',
                               xaxis_title='Year',
-                              yaxis_title='Estimated Units (In Billions)')
+                              yaxis_title='Estimated Sales (In Billions)')
             new_state = False # Next click will show Graph 2
         else:
             # Generate Graph 2
@@ -218,7 +218,7 @@ def register_callbacks(app):
                                   go.Scatter(x=dvdFrame['year'], y=dvdFrame['value_actual'], mode= 'lines', name='DVD'),])
             fig.update_layout(title= 'Music Medium Sales (1973-2019)',
                               xaxis_title='Year',
-                              yaxis_title='Estimated Units (In Billions)')
+                              yaxis_title='Estimated Sales (In Billions)')
             new_state = True  # Next click will show Graph 1
 
         return fig, new_state

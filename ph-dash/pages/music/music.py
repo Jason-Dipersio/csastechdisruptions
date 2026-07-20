@@ -42,7 +42,7 @@ cd_vinyl_sales_fig = go.Figure(data=[go.Scatter(x=cdFrame['year'], y=cdFrame['va
                               go.Scatter(x=vyFrame['year'], y=vyFrame['value_actual'], mode='lines', name='Vinyl')])
 cd_vinyl_sales_fig.update_layout(title='CD Sales vs Vinyl Sales (1973-2019)',
                           xaxis_title='Year',
-                          yaxis_title='Estimated Units (In Millions)')
+                          yaxis_title='Estimated Units (In Billions)')
 
 
 cd_article_count_fig = go.Figure(data=[go.Bar(x=CD_YearlyCount['year'], y=CD_YearlyCount['count'], name='CD')])
@@ -60,7 +60,7 @@ cd_sent_fig.update_layout(title='CD Article Count vs Sentiment Score (1973-2019)
                           legend=dict(x=1.1, y=1))
 
 
-cd_sales_sent_fig = go.Figure(data=[go.Scatter(x=cdFrame['year'], y=cdFrame['value_actual'], name='Units Sold (In Millions)', marker_color='royalblue', opacity=0.8, yaxis='y'),
+cd_sales_sent_fig = go.Figure(data=[go.Scatter(x=cdFrame['year'], y=cdFrame['value_actual'], name='Units Sold (In Billions)', marker_color='royalblue', opacity=0.8, yaxis='y'),
                               go.Scatter(x=CD_YearlySent['year'], y=CD_YearlySent['sentiment_score'], mode='lines', name='Sentiment Score', marker_color='black', yaxis='y2')])
 cd_sales_sent_fig.update_layout(title='CD Sales vs Sentiment Score (1973-2019)',
                           xaxis_title='Year',
@@ -206,7 +206,7 @@ def register_callbacks(app):
                                   go.Scatter(x=vyFrame['year'], y=vyFrame['value_actual'], mode='lines', name='Vinyl')])
             fig.update_layout(title='CD Sales vs Vinyl Sales (1973-2019)',
                               xaxis_title='Year',
-                              yaxis_title='Estimated Units (In Millions)')
+                              yaxis_title='Estimated Units (In Billions)')
             new_state = False # Next click will show Graph 2
         else:
             # Generate Graph 2
@@ -218,7 +218,7 @@ def register_callbacks(app):
                                   go.Scatter(x=dvdFrame['year'], y=dvdFrame['value_actual'], mode= 'lines', name='DVD'),])
             fig.update_layout(title= 'Music Medium Sales (1973-2019)',
                               xaxis_title='Year',
-                              yaxis_title='Estimated Units (In Millions)')
+                              yaxis_title='Estimated Units (In Billions)')
             new_state = True  # Next click will show Graph 1
 
         return fig, new_state
@@ -295,21 +295,21 @@ def register_callbacks(app):
         # Default to Graph 1 if button hasn't been clicked or state is True
         if n_clicks == 0 or current_state:
             # Generate Graph 1
-            fig = go.Figure(data=[go.Scatter(x=cdFrame['year'], y=cdFrame['value_actual'], name='Units Sold (In Millions)', marker_color='royalblue', opacity=0.8, yaxis='y'),
+            fig = go.Figure(data=[go.Scatter(x=cdFrame['year'], y=cdFrame['value_actual'], name='Units Sold (In Billions)', marker_color='royalblue', opacity=0.8, yaxis='y'),
                                   go.Scatter(x=CD_YearlySent['year'], y=CD_YearlySent['sentiment_score'], mode='lines', name='Sentiment Score', marker_color='black', yaxis='y2')])
             fig.update_layout(title='CD Sales vs Sentiment Score (1973-2019)',
                               xaxis_title='Year',
-                              yaxis=dict(title='Units Sold (in Millions)'),
+                              yaxis=dict(title='Units Sold (in Billions)'),
                               yaxis2=dict(title='Sentiment Score', side='right', overlaying='y'),
                               legend=dict(x=1.1, y=1))
             new_state = False # Next click will show Graph 2
         else:
             # Generate Graph 2
-            fig = go.Figure(data=[go.Scatter(x=vyFrame['year'], y=vyFrame['value_actual'], name='Units Sold (In Millions)', marker_color='red', opacity=0.8, yaxis='y'),
+            fig = go.Figure(data=[go.Scatter(x=vyFrame['year'], y=vyFrame['value_actual'], name='Units Sold (In Billions)', marker_color='red', opacity=0.8, yaxis='y'),
                                   go.Scatter(x=LP_YearlySent['year'], y=LP_YearlySent['sentiment_score'], mode='lines', name='Sentiment Score', marker_color='black', yaxis='y2')])
             fig.update_layout(title='Vinyl Sales vs Sentiment Score (1973-2019)',
                               xaxis_title='Year',
-                              yaxis=dict(title='Units Sold (in Millions)'),
+                              yaxis=dict(title='Units Sold (in Billions)'),
                               yaxis2=dict(title='Sentiment Score', side='right', overlaying='y'),
                               legend=dict(x=1.1, y=1))
             new_state = True  # Next click will show Graph 1

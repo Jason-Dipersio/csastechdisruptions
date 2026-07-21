@@ -7,91 +7,241 @@ body {
     background-color: #f0f2f5;
     margin: 0;
     padding: 0;
+    overflow-anchor: none;
 }
 
 /* ── Hub page ── */
 .hub-container {
-    max-width: 780px;
-    margin: 80px auto;
+    position: relative;
+}
+
+/* ── Sticky header ── */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #000;
+    color: #fff;
+    padding: 64px 24px 88px;
     text-align: center;
-    padding: 0 24px;
+    overflow: visible;
+    transition: padding 0.3s ease;
 }
 
-.hub-title {
+/* Soft transparency fade easing the header into the page below it */
+.site-header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -48px;
+    height: 48px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0));
+    pointer-events: none;
+}
+
+.site-header-inner {
+    max-width: 780px;
+    margin: 0 auto;
+    transition: opacity 0.25s ease, max-height 0.3s ease, margin 0.3s ease;
+}
+
+.site-header-title {
     font-size: 2.6rem;
-    color: #0d1b2a;
     margin-bottom: 12px;
+    transition: font-size 0.3s ease;
 }
 
-.hub-subtitle {
-    color: #555;
+.site-header-subtitle {
+    color: #cfd4da;
     font-size: 1.1rem;
-    margin-bottom: 56px;
     line-height: 1.6;
+    margin: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
 }
 
-/* Row of three topic cards */
-.topic-row {
+/* Collapsed state, toggled by assets/hub.js on scroll */
+.site-header.scrolled {
+    padding: 16px 24px 30px;
+}
+
+.site-header.scrolled .site-header-title {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+}
+
+.site-header.scrolled .site-header-subtitle {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+}
+
+.nav-toggle-btn {
+    position: fixed;
+    left: 24px;
+    top: 28px;
+    z-index: 1300;
     display: flex;
-    gap: 20px;
-    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    transition: top 0.3s ease;
+}
+
+.site-header.scrolled ~ .nav-toggle-btn {
+    top: 14px;
+}
+
+.nav-toggle-bar {
+    display: block;
+    width: 26px;
+    height: 3px;
+    border-radius: 2px;
+    background-color: #fff;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.nav-toggle-btn.active .nav-toggle-bar:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+
+.nav-toggle-btn.active .nav-toggle-bar:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle-btn.active .nav-toggle-bar:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+
+.nav-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -280px;
+    width: 280px;
+    background-color: #000;
+    color: #fff;
+    z-index: 1100;
+    padding: 96px 28px 28px;
+    box-shadow: 4px 0 18px rgba(0,0,0,0.35);
+    transition: left 0.3s ease;
+}
+
+.nav-sidebar.open {
+    left: 0;
+}
+
+.nav-sidebar-title {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+    color: #8a8f96;
     margin-bottom: 20px;
 }
 
-.topic-link {
-    flex: 1;
+.nav-sidebar-link {
+    display: block;
+    color: #fff;
     text-decoration: none;
+    font-size: 1.15rem;
+    font-weight: 600;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.topic-card {
-    background-color: #1b2a3b;
+.nav-sidebar-link:hover {
+    color: #9fc1e6;
+}
+
+.topic-sections {
+    display: flex;
+    flex-direction: column;
+}
+
+.topic-section {
+    position: relative;
+    min-height: 92vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.topic-section-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.topic-section-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(0,0,0,0.4);
+}
+
+.topic-section::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    box-shadow: inset 0 0 140px 40px rgba(0,0,0,0.55);
+    pointer-events: none;
+}
+
+.topic-section-content {
+    position: relative;
+    z-index: 2;
+    max-width: 640px;
+    text-align: center;
     color: #fff;
-    font-size: 1.35rem;
+    padding: 40px 24px;
+}
+
+.topic-section-eyebrow {
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
     font-weight: 700;
-    letter-spacing: 0.04em;
-    padding: 56px 0;
-    border-radius: 14px;
-    width: 100%;
-    display: block;
-    cursor: pointer;
-    transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    font-size: 0.9rem;
+    color: #dfe6ee;
+    margin-bottom: 16px;
 }
 
-.topic-card:hover {
-    background-color: #263d56;
-    transform: translateY(-5px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.22);
-}
-
-/* Large AI card spans full width of the row */
-.ai-link {
-    display: block;
-    text-decoration: none;
-}
-
-.ai-card {
-    background-color: #0a3d62;
-    color: #fff;
-    font-size: 2rem;
+.topic-section-heading {
+    font-size: 2.6rem;
     font-weight: 800;
-    letter-spacing: 0.06em;
-    padding: 72px 0;
-    border-radius: 14px;
-    width: 100%;
-    display: block;
+    margin: 0 0 20px;
+}
+
+.topic-section-description {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #e8ebef;
+    margin-bottom: 32px;
+}
+
+.topic-section-btn {
+    display: inline-block;
+    background-color: #fff;
+    color: #0d1b2a;
+    font-weight: 700;
+    padding: 14px 36px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.ai-card:hover {
-    background-color: #1260a8;
-    transform: translateY(-5px);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+.topic-section-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
 }
 
-/* ── Sub-pages ── */
 .page-container {
     max-width: 960px;
     margin: 60px auto;

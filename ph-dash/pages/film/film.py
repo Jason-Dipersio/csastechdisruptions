@@ -1,15 +1,63 @@
+import numpy as np
 import pandas as pd
+from datetime import date
 from io import StringIO
 import plotly.graph_objects as go
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 
 # This try and except block is here so that this film.py file can run independently
-# when it doesn't know the parent directory. 
+# when it doesn't know the parent directory.
 try:
     from .film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
+    from .film_data.manual_movies import get_manual_movies_df
+    from .film_data.letterboxd_fetcher import fetch_letterboxd_ratings
 except ImportError:
     from film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
+    from film_data.manual_movies import get_manual_movies_df
+    from film_data.letterboxd_fetcher import fetch_letterboxd_ratings
+
+# Safety cap
+MAX_LETTERBOXD_FILMS = 500
+
+# Google Trends parameters
+GOOGLE_TRENDS_KEYWORD = "/m/021ny"
+GOOGLE_TRENDS_START = "2004-01-01"
+GOOGLE_TRENDS_END = "2026-01-01"
+GOOGLE_TRENDS_EMBED_LOADER = "https://ssl.gstatic.com/trends_nrtr/3620_RC01/embed_loader.js"
+
+
+def _google_trends_srcdoc(start_date: str, end_date: str) -> str:
+    time_range = f"{start_date} {end_date}"
+    return f"""
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          html, body {{ margin: 0; padding: 0; }}
+          .trends-widget {{ width: 100%; }}
+        </style>
+      </head>
+      <body>
+        <div class="trends-widget"></div>
+        <script type="text/javascript" src="{GOOGLE_TRENDS_EMBED_LOADER}"></script>
+        <script type="text/javascript">
+          trends.embed.renderExploreWidgetTo(
+            document.querySelector(".trends-widget"),
+            "TIMESERIES",
+            {{
+              "comparisonItem": [{{"keyword": "{GOOGLE_TRENDS_KEYWORD}", "geo": "", "time": "{time_range}"}}],
+              "category": 0,
+              "property": ""
+            }},
+            {{
+              "guestPath": "https://trends.google.com:443/trends/embed/"
+            }}
+          );
+        </script>
+      </body>
+    </html>
+    """
 
 
 def _empty_fig(message: str) -> go.Figure:
@@ -51,7 +99,7 @@ def layout():
                         dbc.Input(
                             id="tmdb-key",
                             type="password",
-                            placeholder="Paste your TMDB API key (v3 auth) here",
+                            placeholder="Optional -- only needed for TMDB-based CGI discovery",
                         ),
                     ], width=5),
                 ], className="mb-3"),
@@ -60,14 +108,56 @@ def layout():
                     color="primary", className="me-2",
                 ),
                 html.Span(id="fetch-tmdb-status", className="text-muted small align-middle"),
+                html.P(
+                    "Combines TMDB keyword-tagged CGI films with a manually curated list "
+                    "(film_data/manual_movies.py) for titles TMDB misses, then looks up each "
+                    "film's Letterboxd rating automatically -- no Letterboxd key needed.",
+                    className="text-muted small mt-2 mb-0",
+                ),
             ], title="API Configuration"),
         ], start_collapsed=False, className="mb-4"),
 
+        # Google Trends: public search interest as background context for the
+        # CGI prevalence/sentiment data
+        html.H4("Public Search Interest in \"Computer-Generated Imagery\"", className="mb-1"),
+        html.P(
+            "Google Trends interest over time for the \"Computer-generated imagery\" "
+            "topic (worldwide) -- Google's disambiguated entity for CGI, rather than "
+            "a bare text search. Values are relative search interest, scaled 0-100 "
+            "against the topic's peak popularity in the selected range.",
+            className="text-muted small mb-3",
+        ),
+        dbc.Row([
+            dbc.Col([
+                dbc.Label("Date Range"),
+                dcc.DatePickerRange(
+                    id="trends-date-range",
+                    min_date_allowed=date(2004, 1, 1),
+                    max_date_allowed=date(2026, 1, 1),
+                    start_date=date(2004, 1, 1),
+                    end_date=date(2026, 1, 1),
+                    display_format="YYYY-MM-DD",
+                ),
+            ], width="auto"),
+        ], className="mb-3"),
+        dcc.Loading(
+            html.Iframe(
+                id="google-trends-iframe",
+                srcDoc=_google_trends_srcdoc(GOOGLE_TRENDS_START, GOOGLE_TRENDS_END),
+                title="Google Trends: search interest for the 'Computer-generated imagery' topic",
+                style={"width": "100%", "height": "420px", "border": "none"},
+            ),
+            type="circle",
+        ),
+
+        html.Hr(className="mt-4"),
         html.H4("CGI Prevalence in Cinema", className="mb-1"),
         html.P(
-            "Movies tagged with CGI-related keywords on TMDB, filtered to titles with "
-            "at least 50 audience votes. Volume (left) indicates how many notable CGI "
-            "films were released each year; average rating (right) tracks overall reception.",
+            "Movies identified via TMDB CGI-related keywords plus a manually curated "
+            "list. Volume (left) indicates how many notable CGI films were released "
+            "each year; average rating (right) is each year's Letterboxd rating, "
+            "weighted by rating count, drawing on Letterboxd's much larger audience "
+            "sample than TMDB alone.",
             className="text-muted small mb-3",
         ),
 
@@ -83,7 +173,7 @@ def layout():
                 ),
             ], width=6),
             dbc.Col([
-                html.H5("Average TMDB Rating of CGI Films", className="mb-2"),
+                html.H5("Average Letterboxd Rating of CGI Films", className="mb-2"),
                 dcc.Loading(
                     dcc.Graph(
                         id="cgi-rating-chart",
@@ -92,9 +182,26 @@ def layout():
                     type="circle",
                 ),
             ], width=6),
-        ], className="mb-5"),
+        ], className="mb-3"),
 
-        # Sentiment 
+        # Config settings for the CGI prevalence/rating charts above
+        html.Div([
+            html.H6("Chart Settings", className="mb-2"),
+            dbc.Row([
+                dbc.Col([
+                    dbc.Label("Filter by Release Year"),
+                    dcc.RangeSlider(
+                        id="cgi-year-slider",
+                        min=1993, max=2026, step=1,
+                        value=[1993, 2026],
+                        marks={y: str(y) for y in range(1993, 2027, 5)},
+                        tooltip={"placement": "bottom", "always_visible": False},
+                    ),
+                ], width=6),
+            ]),
+        ], className="mb-5 p-3", style={"backgroundColor": "#f8f9fa", "borderRadius": "8px"}),
+
+        # Sentiment
         html.Hr(),
         html.H4("Audience Sentiment", className="mt-4 mb-1"),
         html.P(
@@ -157,7 +264,17 @@ def layout():
 
 def register_callbacks(app):
 
-# Fetch TMDB CGI movie data 
+    @app.callback(
+        Output("google-trends-iframe", "srcDoc"),
+        Input("trends-date-range", "start_date"),
+        Input("trends-date-range", "end_date"),
+    )
+    def update_trends_iframe(start_date, end_date):
+        start_date = start_date or GOOGLE_TRENDS_START
+        end_date = end_date or GOOGLE_TRENDS_END
+        return _google_trends_srcdoc(start_date, end_date)
+
+# Fetch TMDB CGI movie data
     @app.callback(
         Output("film-tmdb-store", "data"),
         Output("fetch-tmdb-status", "children"),
@@ -168,16 +285,48 @@ def register_callbacks(app):
     )
 
     def fetch_tmdb(_, api_key):
-        if not api_key:
-            return None, "Please enter a TMDB API key first.", []
-        df = fetch_cgi_movies(api_key)
+        df_tmdb = pd.DataFrame()
+        if api_key:
+            df_tmdb = fetch_cgi_movies(api_key)
+        if not df_tmdb.empty:
+            df_tmdb["source"] = "tmdb"
+
+        df_manual = get_manual_movies_df()
+        if not df_tmdb.empty:
+            existing = set(zip(df_tmdb["title"].str.lower(), df_tmdb["year"]))
+            df_manual = df_manual[
+                ~df_manual.apply(lambda r: (r["title"].lower(), r["year"]) in existing, axis=1)
+            ]
+
+        df = pd.concat([df_tmdb, df_manual], ignore_index=True)
         if df.empty:
-            return None, "No data found. Please check your API key or try again.", []
+            return (
+                None,
+                "No data found. Check your TMDB API key, or add titles to "
+                "film_data/manual_movies.py.",
+                [],
+            )
+
+        n_found = len(df)
+        df = fetch_letterboxd_ratings(df, max_films=MAX_LETTERBOXD_FILMS)
+        n_capped = n_found - len(df)
+
         options = [
             {"label": f"{row['title']} ({int(row['year'])})", "value": row["title"]}
             for _, row in df.sort_values(["year", "title"]).iterrows()
         ]
-        msg = f"Loaded {len(df)} CGI-tagged films across {df['year'].nunique()} years."
+        n_manual = int((df["source"] == "manual").sum())
+        n_tmdb = len(df) - n_manual
+        n_matched = int(df["lb_matched"].sum())
+        msg = (
+            f"Loaded {len(df)} CGI films ({n_tmdb} TMDB + {n_manual} manual) across "
+            f"{df['year'].nunique()} years. Matched Letterboxd ratings for {n_matched}/{len(df)}."
+        )
+        if n_capped:
+            msg += (
+                f" Capped Letterboxd lookups at {MAX_LETTERBOXD_FILMS} "
+                f"({n_capped} lower-priority TMDB titles skipped)."
+            )
         return df.to_json(orient="records", date_format="iso"), msg, options
 
 # Major CGI volume/use chart
@@ -185,8 +334,9 @@ def register_callbacks(app):
         Output("cgi-volume-chart", "figure"),
         Output("cgi-rating-chart", "figure"),
         Input("film-tmdb-store", "data"),
+        Input("cgi-year-slider", "value"),
     )
-    def update_cgi_charts(json_data):
+    def update_cgi_charts(json_data, year_range):
         waiting = _empty_fig("Please fetch CGI movie data first to see this chart")
         if not json_data:
             return waiting, waiting
@@ -194,11 +344,23 @@ def register_callbacks(app):
         df = pd.read_json(StringIO(json_data), orient="records")
         df["year"] = df["year"].astype(int)
 
-        by_year = (
-            df.groupby("year")
-            .agg(count=("id", "count"), avg_rating=("vote_average", "mean"))
-            .reset_index()
-        )
+        if year_range:
+            df = df[df["year"].between(year_range[0], year_range[1])]
+
+        if df.empty:
+            empty = _empty_fig("No films in the selected year range")
+            return empty, empty
+
+        def _year_stats(g: pd.DataFrame) -> pd.Series:
+            matched = g[g["lb_matched"] == True]  # noqa: E712
+            weights = matched["lb_rating_count"]
+            if matched.empty or weights.sum() == 0:
+                avg_rating = np.nan
+            else:
+                avg_rating = np.average(matched["lb_rating"], weights=weights)
+            return pd.Series({"count": len(g), "avg_rating": avg_rating})
+
+        by_year = df.groupby("year").apply(_year_stats).reset_index()
 
         # Volume bar chart
         fig_vol = go.Figure(go.Bar(
@@ -222,13 +384,13 @@ def register_callbacks(app):
             mode="lines+markers",
             line=dict(color="#e74c3c", width=2),
             marker=dict(size=6),
-            hovertemplate="<b>%{x}</b><br>Avg Rating: %{y:.2f}<extra></extra>",
+            hovertemplate="<b>%{x}</b><br>Avg Rating: %{y:.2f} / 5<extra></extra>",
         ))
         fig_rat.update_layout(
             plot_bgcolor="#ffffff",
             paper_bgcolor="rgba(0,0,0,0)",
             xaxis=dict(title="Year", dtick=3),
-            yaxis=dict(title="Avg TMDB Rating", range=[4, 10]),
+            yaxis=dict(title="Avg Letterboxd Rating (0.5-5)", range=[0, 5]),
             margin=dict(t=10, b=10),
         )
 
@@ -254,18 +416,23 @@ def register_callbacks(app):
 
         df_tmdb = pd.read_json(StringIO(tmdb_json), orient="records")
         pairs = []
+        skipped = 0
         for title in selected_titles:
             row = df_tmdb[df_tmdb["title"] == title]
-            if not row.empty:
+            if not row.empty and pd.notna(row.iloc[0]["id"]):
                 pairs.append((title, int(row.iloc[0]["id"]), int(row.iloc[0]["year"])))
+            else:
+                skipped += 1
 
         if not pairs:
-            return None, "Could not match selected titles to TMDB IDs."
+            return None, "None of the selected films have a TMDB ID (manual-only entries can't fetch reviews)."
 
         df = fetch_tmdb_reviews(api_key, pairs)
         if df.empty:
             return None, "No reviews found for the selected films."
         msg = f"Analyzed {len(df)} reviews across {df['title'].nunique()} film(s)."
+        if skipped:
+            msg += f" Skipped {skipped} film(s) with no TMDB ID."
         return df.to_json(orient="records", date_format="iso"), msg
 
     # Sentiment analysis charts

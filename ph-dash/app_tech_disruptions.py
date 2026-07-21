@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 
 from pages.film import film
 from pages.gaming import gaming
+from pages.music import music
 # We'll import the other pages here in the page directory when they're ready if you want.
 
 app = dash.Dash(
@@ -17,6 +18,7 @@ server = app.server
 # Register callbacks
 film.register_callbacks(app)
 gaming.register_callbacks(app)
+music.register_callbacks(app)
 
 
 # Home page
@@ -48,6 +50,7 @@ def placeholder_page(title):
     ], className="page-container")
 
 music_layout = placeholder_page("Music Industry Disruptions")
+gaming_layout = placeholder_page("Gaming Industry Disruptions")
 ai_layout    = placeholder_page("How AI Affects These Industries")
 
 app.layout = html.Div([
@@ -58,7 +61,7 @@ app.layout = html.Div([
 @app.callback(Output("page-content", "children"), Input("url", "pathname"))
 def display_page(pathname):
     if pathname == "/music":
-        return music_layout # placeholder
+        return music.layout()
     if pathname == "/gaming":
         return gaming.layout()
     if pathname == "/film":

@@ -3,6 +3,7 @@ from dash import dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 
 from pages.film import film
+from pages.gaming import gaming
 from pages.music import music
 # We'll import the other pages here in the page directory when they're ready if you want.
 
@@ -16,6 +17,7 @@ server = app.server
 
 # Register callbacks
 film.register_callbacks(app)
+gaming.register_callbacks(app)
 music.register_callbacks(app)
 
 
@@ -47,6 +49,7 @@ def placeholder_page(title):
         dcc.Link("← Back to Hub", href="/", className="back-link"),
     ], className="page-container")
 
+music_layout = placeholder_page("Music Industry Disruptions")
 gaming_layout = placeholder_page("Gaming Industry Disruptions")
 ai_layout    = placeholder_page("How AI Affects These Industries")
 
@@ -60,7 +63,7 @@ def display_page(pathname):
     if pathname == "/music":
         return music.layout()
     if pathname == "/gaming":
-        return gaming_layout # placeholder
+        return gaming.layout()
     if pathname == "/film":
         return film.layout()
     if pathname == "/ai":

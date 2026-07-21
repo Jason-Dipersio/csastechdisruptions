@@ -109,3 +109,28 @@ body {
 .back-link:hover {
     text-decoration: underline;
 }
+
+/* ── Gaming page: technology timeline ── */
+.gaming-timeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.gaming-timeline-node {
+    background-color: #0a3d62;
+    color: #fff;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 220px;
+}
+
+.gaming-timeline-arrow {
+    color: #0a3d62;
+    font-size: 1.4rem;
+    line-height: 1.4rem;
+    margin: 4px 0;
+}

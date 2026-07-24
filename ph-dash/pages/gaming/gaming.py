@@ -15,10 +15,13 @@ import dash_bootstrap_components as dbc
 # sources), NOT measured statistics, survey results, or percentages.
 
 # Small shared palette so KPI accents, chart series, and the timeline all
-# read as one page instead of unrelated colors.
-PRIMARY_DARK = "#0a3d62"
-SERIES_BLUE = "#2a78d6"
-SERIES_ORANGE = "#eb6834"
+# read as one page instead of unrelated colors. Anchored to the deep green
+# used for the Gaming card on the hub (#1f5c4a) — that exact hex is too dark
+# and low-chroma to read as a chart series color, so SERIES_GREEN is a
+# brightened, validated step of the same hue (see dataviz palette checks).
+PRIMARY_DARK = "#1f5c4a"
+SERIES_GREEN = "#238a68"
+SERIES_AMBER = "#c98a2c"
 
 CATEGORY_ORDER = ["Low", "Moderate", "High", "Very High"]
 CATEGORY_RANK = {name: i + 1 for i, name in enumerate(CATEGORY_ORDER)}
@@ -120,8 +123,10 @@ GUARDIAN_COVERAGE = {
     "Procedural generation": [3, 3, 2, 1, 0, 0, 1, 0, 1, 0, 1, 1],
     "Generative AI games":   [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 8, 3],
 }
-# Categorical palette (CVD-safe ordering), reused for both real-data charts.
-REAL_DATA_PALETTE = [SERIES_BLUE, "#1baf7a", "#eda100", "#4a3aa7", "#e34948"]
+# Categorical palette (CVD-safe ordering, validated all-pairs for small
+# multiples/overlapping lines), reused for both real-data charts. Leads with
+# the same brand green as the qualitative charts below.
+REAL_DATA_PALETTE = [SERIES_GREEN, SERIES_AMBER, "#2a78d6", "#8a3f9e", "#c9382e"]
 
 
 def _kpi_card(value, label):
@@ -139,7 +144,10 @@ def _horizontal_bar(data, color):
 
     Bar length encodes rank order only — the axis and hover text always show
     the category label, never a number, so the chart can't be misread as a
-    measured statistic.
+    measured statistic. The category name is shown once, as an x-axis tick
+    label, rather than repeated as text at the end of each bar — that
+    repeated label was prone to being clipped by the card edge on narrow
+    screens, and dropping it also reduces clutter.
     """
     labels = [d[0] for d in data]
     categories = [d[1] for d in data]
@@ -150,22 +158,27 @@ def _horizontal_bar(data, color):
         y=labels,
         orientation="h",
         marker_color=color,
-        text=categories,
-        textposition="outside",
         hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>",
+        text=categories,
     ))
     fig.update_layout(
         plot_bgcolor="#ffffff",
         paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=10, r=110, t=10, b=10),
+        margin=dict(l=10, r=20, t=10, b=10),
         xaxis=dict(
             title="Qualitative emphasis in reviewed literature",
             range=[0, len(CATEGORY_ORDER) + 0.5],
             tickmode="array",
             tickvals=list(CATEGORY_RANK.values()),
             ticktext=CATEGORY_ORDER,
+            tickfont=dict(size=12),
+            automargin=True,
         ),
-        yaxis=dict(autorange="reversed"),
+        yaxis=dict(
+            autorange="reversed",
+            automargin=True,
+            tickfont=dict(size=12),
+        ),
         height=max(280, len(data) * 55),
         font=dict(color="#0b0b0b"),
     )
@@ -255,8 +268,8 @@ def _google_trends_figure():
         plot_bgcolor="#ffffff",
         paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=10, r=10, t=10, b=10),
-        xaxis=dict(title="Date"),
-        yaxis=dict(title="Search interest (Google Trends index, 0-100)"),
+        xaxis=dict(title="Date", automargin=True),
+        yaxis=dict(title="Search interest (Google Trends index, 0-100)", automargin=True),
         legend=dict(orientation="h", yanchor="top", y=-0.18),
         height=380,
         font=dict(color="#0b0b0b"),
@@ -287,8 +300,8 @@ def _guardian_coverage_figure():
             ),
             row=row, col=col,
         )
-    fig.update_xaxes(dtick=3)
-    fig.update_yaxes(rangemode="tozero")
+    fig.update_xaxes(dtick=3, automargin=True)
+    fig.update_yaxes(rangemode="tozero", automargin=True)
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="#ffffff",
@@ -413,7 +426,7 @@ def layout():
                 dcc.Graph(
                     id="gaming-trends-chart",
                     figure=_google_trends_figure(),
-                    config={"displayModeBar": False},
+                    config={"displayModeBar": False, "responsive": True},
                 ),
                 _chart_note(
                     "Source: Google Trends (trends.google.com). Index is relative search "
@@ -459,7 +472,7 @@ def layout():
                 dcc.Graph(
                     id="gaming-guardian-chart",
                     figure=_guardian_coverage_figure(),
-                    config={"displayModeBar": False},
+                    config={"displayModeBar": False, "responsive": True},
                 ),
                 _chart_note(
                     "Source: The Guardian Open Platform API (content.guardianapis.com). Full, "
@@ -489,8 +502,8 @@ def layout():
                     dbc.CardBody([
                         dcc.Graph(
                             id="gaming-ai-applications-chart",
-                            figure=_horizontal_bar(AI_APPLICATIONS, SERIES_BLUE),
-                            config={"displayModeBar": False},
+                            figure=_horizontal_bar(AI_APPLICATIONS, SERIES_GREEN),
+                            config={"displayModeBar": False, "responsive": True},
                         ),
                         _chart_note(
                             "Qualitative summary of the reviewed literature, not measured data: "
@@ -521,8 +534,8 @@ def layout():
                     dbc.CardBody([
                         dcc.Graph(
                             id="gaming-challenges-chart",
-                            figure=_horizontal_bar(CURRENT_CHALLENGES, SERIES_ORANGE),
-                            config={"displayModeBar": False},
+                            figure=_horizontal_bar(CURRENT_CHALLENGES, SERIES_AMBER),
+                            config={"displayModeBar": False, "responsive": True},
                         ),
                         _chart_note(
                             "Qualitative summary of the reviewed literature, not measured data: "
@@ -591,7 +604,7 @@ def layout():
             style={"borderColor": f"{PRIMARY_DARK} !important"},
         ),
 
-    ], fluid=True, className="page-container py-4")
+    ], fluid=True, className="page-container gaming-page py-4")
 
 
 def register_callbacks(app):

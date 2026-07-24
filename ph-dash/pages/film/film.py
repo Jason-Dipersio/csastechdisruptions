@@ -12,10 +12,14 @@ try:
     from .film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
     from .film_data.manual_movies import get_manual_movies_df
     from .film_data.letterboxd_fetcher import fetch_letterboxd_ratings
+    from .film_data.cgi_revenue import build_cgi_revenue_chart
+    from .film_data.ai_acceptance import build_ai_acceptance_chart
 except ImportError:
     from film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
     from film_data.manual_movies import get_manual_movies_df
     from film_data.letterboxd_fetcher import fetch_letterboxd_ratings
+    from film_data.cgi_revenue import build_cgi_revenue_chart
+    from film_data.ai_acceptance import build_ai_acceptance_chart
 
 # Safety cap
 MAX_LETTERBOXD_FILMS = 500
@@ -116,6 +120,21 @@ def layout():
                 ),
             ], title="API Configuration"),
         ], start_collapsed=False, className="mb-4"),
+
+        # Static box office revenue trend -- sourced from a Statista export,
+        # doesn't depend on the TMDB/Letterboxd fetch flow so it renders immediately.
+        html.H4("CGI & Animated Movie Box Office Revenue", className="mb-1"),
+        html.P(
+            "Box office revenue of CGI, 3D and animated movies in the United States, "
+            "2008–2018 (Statista).",
+            className="text-muted small mb-3",
+        ),
+        dcc.Graph(
+            id="cgi-revenue-chart",
+            figure=build_cgi_revenue_chart(),
+            config={"displayModeBar": False},
+            className="mb-4",
+        ),
 
         # Google Trends: public search interest as background context for the
         # CGI prevalence/sentiment data
@@ -256,6 +275,23 @@ def layout():
                 config={"displayModeBar": False},
             ),
             type="circle",
+        ),
+
+        # AI in Film -- static chart sourced from a Statista survey export,
+        # doesn't depend on the TMDB/Letterboxd fetch flow so it renders immediately.
+        html.Hr(className="mt-4"),
+        html.H4("AI in Film: Audience Acceptance", className="mb-1"),
+        html.P(
+            "Consumer perception of the use of generative AI in film and TV "
+            "production in the United States, by aspect of production "
+            "(December 2025, Statista).",
+            className="text-muted small mb-3",
+        ),
+        dcc.Graph(
+            id="ai-acceptance-chart",
+            figure=build_ai_acceptance_chart(),
+            config={"displayModeBar": False},
+            className="mb-4",
         ),
 
     ], fluid=True, className="page-container py-4")

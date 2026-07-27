@@ -7,6 +7,7 @@ from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
+from PIL import Image
 
 # This import should work wherever music.py is run (by itself
 # or from app_tech_disruptions.py)
@@ -19,6 +20,7 @@ CD_YearlySent = pd.read_csv(DATA_DIR / "CD_yearlysent.csv")
 LP_YearlyCount = pd.read_csv(DATA_DIR / "LP_yearlycount.csv")
 LP_YearlySent = pd.read_csv(DATA_DIR / "LP_yearlysent.csv")
 df = pd.read_csv(DATA_DIR / "musicdata.csv")
+pil_image = Image.open(DATA_DIR / "source_qr.png")
 
 # Set up subframes for sales
 

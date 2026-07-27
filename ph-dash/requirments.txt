@@ -13,3 +13,5 @@ gunicorn
 beautifulsoup4
 
 vaderSentiment
+
+pillow

@@ -12,10 +12,20 @@ try:
     from .film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
     from .film_data.manual_movies import get_manual_movies_df
     from .film_data.letterboxd_fetcher import fetch_letterboxd_ratings
+    from .film_data.cgi_revenue import build_cgi_revenue_chart
+    from .film_data.ai_acceptance import build_ai_acceptance_chart
+    from .film_data.rotten_tomatoes_fetcher import (
+        get_movie_options, build_freshness_chart, MAX_SELECTED_FILMS,
+    )
 except ImportError:
     from film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
     from film_data.manual_movies import get_manual_movies_df
     from film_data.letterboxd_fetcher import fetch_letterboxd_ratings
+    from film_data.cgi_revenue import build_cgi_revenue_chart
+    from film_data.ai_acceptance import build_ai_acceptance_chart
+    from film_data.rotten_tomatoes_fetcher import (
+        get_movie_options, build_freshness_chart, MAX_SELECTED_FILMS,
+    )
 
 # Safety cap
 MAX_LETTERBOXD_FILMS = 500
@@ -117,8 +127,21 @@ def layout():
             ], title="API Configuration"),
         ], start_collapsed=False, className="mb-4"),
 
-        # Google Trends: public search interest as background context for the
-        # CGI prevalence/sentiment data
+        # Static box office revenue trend -- sourced from a Statista export,
+        html.H4("CGI & Animated Movie Box Office Revenue", className="mb-1"),
+        html.P(
+            "Box office revenue of CGI, 3D and animated movies in the United States, "
+            "2008–2018 (Statista).",
+            className="text-muted small mb-3",
+        ),
+        dcc.Graph(
+            id="cgi-revenue-chart",
+            figure=build_cgi_revenue_chart(),
+            config={"displayModeBar": False},
+            className="mb-4",
+        ),
+
+        # Google Trends
         html.H4("Public Search Interest in \"Computer-Generated Imagery\"", className="mb-1"),
         html.P(
             "Google Trends interest over time for the \"Computer-generated imagery\" "
@@ -201,6 +224,38 @@ def layout():
             ]),
         ], className="mb-5 p-3", style={"backgroundColor": "#f8f9fa", "borderRadius": "8px"}),
 
+        # Rotten Tomatoes critical reception over time
+        html.Hr(className="mt-4"),
+        html.H4("Critical Reception Over Time", className="mb-1"),
+        html.P(
+            "Pick one or more films to see their % Fresh critic reviews "
+            "(Rotten Tomatoes) by year.",
+            className="text-muted small mb-3",
+        ),
+        dbc.Row([
+            dbc.Col([
+                dbc.Label("Films to Compare"),
+                dcc.Dropdown(
+                    id="rt-movie-select",
+                    options=get_movie_options(),
+                    multi=True,
+                    placeholder="Search for a film by name",
+                ),
+                html.P(
+                    f"Only films with reviews spanning multiple years are listed. "
+                    f"Comparisons are capped at {MAX_SELECTED_FILMS} films.",
+                    className="text-muted small mt-2 mb-0",
+                ),
+            ], width=8),
+        ], className="mb-3"),
+        dcc.Loading(
+            dcc.Graph(
+                id="rt-freshness-chart",
+                config={"displayModeBar": False},
+            ),
+            type="circle",
+        ),
+
         # Sentiment
         html.Hr(),
         html.H4("Audience Sentiment", className="mt-4 mb-1"),
@@ -256,6 +311,22 @@ def layout():
                 config={"displayModeBar": False},
             ),
             type="circle",
+        ),
+
+        # AI in Film
+        html.Hr(className="mt-4"),
+        html.H4("AI in Film: Audience Acceptance", className="mb-1"),
+        html.P(
+            "Consumer perception of the use of generative AI in film and TV "
+            "production in the United States, by aspect of production "
+            "(December 2025, Statista).",
+            className="text-muted small mb-3",
+        ),
+        dcc.Graph(
+            id="ai-acceptance-chart",
+            figure=build_ai_acceptance_chart(),
+            config={"displayModeBar": False},
+            className="mb-4",
         ),
 
     ], fluid=True, className="page-container py-4")
@@ -395,6 +466,14 @@ def register_callbacks(app):
         )
 
         return fig_vol, fig_rat
+
+# Rotten Tomatoes freshness-over-time chart
+    @app.callback(
+        Output("rt-freshness-chart", "figure"),
+        Input("rt-movie-select", "value"),
+    )
+    def update_rt_freshness_chart(selected_links):
+        return build_freshness_chart(selected_links or [])
 
 #Fetch TMDB reviews
     @app.callback(

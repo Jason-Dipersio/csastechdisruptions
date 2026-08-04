@@ -65,8 +65,8 @@ hub_layout = html.Div([
             "/music", "#3a2e6b", "See Music Data",
         ),
         topic_section(
-            "Gaming", "AI in Gaming",
-            "The Evolution from 2D Graphics to AI-Assisted Game Development",
+            "Gaming", "Player Perceptions of AI",
+            "Sentiment analysis of real Reddit discussions on AI in game development.",
             "/gaming", "#1f5c4a", "Explore Gaming",
         ),
         topic_section(

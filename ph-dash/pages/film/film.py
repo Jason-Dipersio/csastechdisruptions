@@ -14,18 +14,19 @@ try:
     from .film_data.letterboxd_fetcher import fetch_letterboxd_ratings
     from .film_data.cgi_revenue import build_cgi_revenue_chart
     from .film_data.ai_acceptance import build_ai_acceptance_chart
-    from .film_data.rotten_tomatoes_fetcher import (
-        get_movie_options, build_freshness_chart, MAX_SELECTED_FILMS,
-    )
+
+    #from .film_data.rotten_tomatoes_fetcher import (
+        #get_movie_options, build_freshness_chart, MAX_SELECTED_FILMS,
+    #)
 except ImportError:
     from film_data.tmdb_fetcher import fetch_cgi_movies, fetch_tmdb_reviews
     from film_data.manual_movies import get_manual_movies_df
     from film_data.letterboxd_fetcher import fetch_letterboxd_ratings
     from film_data.cgi_revenue import build_cgi_revenue_chart
     from film_data.ai_acceptance import build_ai_acceptance_chart
-    from film_data.rotten_tomatoes_fetcher import (
-        get_movie_options, build_freshness_chart, MAX_SELECTED_FILMS,
-    )
+    #from film_data.rotten_tomatoes_fetcher import (
+        #get_movie_options, build_freshness_chart, MAX_SELECTED_FILMS,
+    #)
 
 # Safety cap
 MAX_LETTERBOXD_FILMS = 500
@@ -259,8 +260,8 @@ def layout():
                     placeholder="Search for a film by name",
                 ),
                 html.P(
-                    f"Only films with reviews spanning multiple years are listed. "
-                    f"Comparisons are capped at {MAX_SELECTED_FILMS} films.",
+                    f"Only films with reviews spanning multiple years are listed. ",
+                    #f"Comparisons are capped at {MAX_SELECTED_FILMS} films.",
                     className="text-muted small mt-2 mb-0",
                 ),
             ], width=8),
@@ -485,12 +486,13 @@ def register_callbacks(app):
         return fig_vol, fig_rat
 
 # Rotten Tomatoes freshness-over-time chart
-    @app.callback(
-        Output("rt-freshness-chart", "figure"),
-        Input("rt-movie-select", "value"),
-    )
-    def update_rt_freshness_chart(selected_links):
-        return build_freshness_chart(selected_links or [])
+    
+    #@app.callback(
+        #Output("rt-freshness-chart", "figure"),
+        #Input("rt-movie-select", "value"),
+    #)
+    #def update_rt_freshness_chart(selected_links):
+        #return build_freshness_chart(selected_links or [])
 
 #Fetch TMDB reviews
     @app.callback(

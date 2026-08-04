@@ -16,4 +16,4 @@ vaderSentiment
 
 pillow
 
-python-docx
+openpyxl

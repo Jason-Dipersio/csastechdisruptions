@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 ph-dash/pages/film/film_data/rotten_tomatoes_movies.csv
 ph-dash/pages/film/film_data/rotten_tomatoes_critic_reviews.csv
+ph-dash/pages/film/film_data/rotten_tomatoes_yearly_fresh.csv
